@@ -1,2 +1,2 @@
-# lemex
-lemex is a simple python script to generate an index from a pdf file.
+# pdfindex
+pdfindex is a simple python script to generate an index from a pdf file.
