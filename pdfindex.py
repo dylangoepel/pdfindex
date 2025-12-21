@@ -4,14 +4,14 @@ import regex
 import sys
 
 theoremRegexes = [
-    b'^([A-Z][a-zA-Z\\/]+) ([0-9]+(\\.[0-9]+)*) +(\\([^)]+\\))',
-    b'^([A-Z][a-zA-Z\\/]+) ([0-9]+(\\.[0-9]+)*) +((\\([^)]+\\)[ .\n])?)',
-    b'^([A-Z][a-zA-Z\\/]+) ([0-9]+(\\.[0-9]+)*) *',
+    '^([A-Z][a-zA-Z\\/]+) ([0-9]+(\\.[0-9]+)*) +(\\([^)]+\\))',
+    '^([A-Z][a-zA-Z\\/]+) ([0-9]+(\\.[0-9]+)*) +((\\([^)]+\\)[ .\n])?)',
+    '^([A-Z][a-zA-Z\\/]+) ([0-9]+(\\.[0-9]+)*) *',
 ]
 theoremRegexesCompiled = [regex.compile(x) for x in theoremRegexes]
 
 def matchTheoremRegex(x):
-    for line in x.split(b"\n"):
+    for line in x.split("\n"):
         for tr in theoremRegexesCompiled:
             for match in tr.findall(line):
                 yield match
@@ -37,6 +37,7 @@ availableKinds = [
   'aufgabe'
 ]
 
+
 s = set()
 def loadBookmarks(filename):
     fname = filename.split('/')[-1].removesuffix('.pdf')
@@ -44,15 +45,15 @@ def loadBookmarks(filename):
     i = 0
     for page in doc.pages():
         i += 1
-        text = page.get_text().encode('utf-8')
+        text = page.get_text().encode('ascii', 'ignore').decode('ascii')
         for match in matchTheoremRegex(text):
-            kind = match[0].decode('utf-8').split('/')[-1].lower()
-            index = match[1].decode('utf-8')
-            if kind not in availableKinds:
+            kind = match[0]
+            index = match[1]
+            if kind.split('/')[0].lower() not in availableKinds:
                 print(f'[{fname}] unknown kind: {kind} ({index})', file=sys.stderr)
                 continue
-            title = match[3].decode('utf-8').strip().strip('()').strip().replace('\n', '') if len(match) > 3 else ""
-            k = index + kind
+            title = match[3].strip().strip('()').strip().replace('\n', '') if len(match) > 3 else ""
+            k = index + kind.lower()
             if k not in s:
                 s.add(k)
                 yield [index, kind, title, i]
@@ -86,6 +87,6 @@ for filename in filenames:
         (i, kind, title, page) = b
         bs.append([filename, f'{i}', page])
         if title != "":
-            print(f'{page:03d}\t{kind} {i}. ({title})')
+            print(f'{i}. [{kind}. {title}]({filename}?p={page})')
         elif 'n' not in flags:
-            print(f'{page:03d}\t{kind} {i}.')
+            print(f'{i}. [{kind}.]({filename}?p={page})')
